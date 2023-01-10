@@ -99,7 +99,7 @@ $Build_ww3_prepost && {
   ./build_ww3prepost.sh ${_verbose_opt} ${_build_ufs_opt} > $logs_dir/build_ww3_prepost.log 2>&1
   rc=$?
   if [[ $rc -ne 0 ]] ; then
-    echo "Fatal error in building WW3 pre/post processing."
+   echo "Fatal error in building WW3 pre/post processing."
     echo "The log file is in $logs_dir/build_ww3_prepost.log"
   fi
   ((err+=$rc))

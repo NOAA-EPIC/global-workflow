@@ -123,8 +123,9 @@ elif [[ -d /lfs3 ]] ; then
     export myFC=mpiifort
 
 else
-    echo WARNING: UNKNOWN PLATFORM 1>&2
+    echo setting platform to: singularity 1>&2
 fi
+target="singularity"
 
 unset __ms_shell
 unset __ms_ksh_test

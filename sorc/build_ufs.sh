@@ -31,6 +31,7 @@ COMPILE_NR=0
 CLEAN_BEFORE=YES
 CLEAN_AFTER=NO
 
+MACHINE_ID="singularity.intel"
 ./tests/compile.sh $MACHINE_ID "$MAKE_OPT" $COMPILE_NR $CLEAN_BEFORE $CLEAN_AFTER
 mv ./tests/fv3_${COMPILE_NR}.exe ./tests/ufs_model.x
 mv ./tests/modules.fv3_${COMPILE_NR} ./tests/modules.ufs_model
