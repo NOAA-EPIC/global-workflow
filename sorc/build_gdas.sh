@@ -3,11 +3,12 @@ set -eux
 
 OPTIND=1
 _opts="-f "  # forces a clean build
-while getopts ":j:dv" option; do
+while getopts ":j:idv" option; do
   case "${option}" in
     d) _opts+="-c -DCMAKE_BUILD_TYPE=Debug " ;;
     j) BUILD_JOBS=${OPTARG};;
     v) _opts+="-v ";;
+    i) _opts+="-i -a ";;
     :)
       echo "[${BASH_SOURCE[0]}]: ${option} requires an argument"
       usage

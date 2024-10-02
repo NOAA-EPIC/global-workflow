@@ -1,0 +1,10 @@
+export stack_intel_ver=2021.10.0
+export stack_impi_ver=2021.12.1
+export spack_env=global-workflow-env
+source "${HOMEgfs:-}/versions/run.container.ver"
+export spack_mod_path="/opt/spack-stack/spack-stack-${spack_stack_ver}/envs/${spack_env}/install/modulefiles/Core"
+export I_MPI_CC=$CC
+export I_MPI_CXX=$CXX
+export I_MPI_F77=$FC
+export I_MPI_FC=$FC
+export I_MPI_F90=$FC
