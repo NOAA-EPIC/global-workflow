@@ -223,10 +223,6 @@ class GFSCycledAppConfig(AppConfig):
 
                 task_names[run] += ['atmanlupp', 'atmanlprod', 'fcst']
 
-                if run == "gdas":
-                    if options['do_jediinline']:
-                        task_names[run] += ['jediinline']
-
                 # gfs-specific products
                 if run == 'gfs':
                     if options['do_ocean']:
@@ -325,6 +321,7 @@ class GFSCycledAppConfig(AppConfig):
 
                 task_names[run].append('esnowanl') if options['do_jedisnowda'] else 0
                 task_names[run].append('efcs') if 'gdas' in run else 0
+                task_names[run].append('jediinline') if 'gdas' in run else 0
                 task_names[run].append('epos') if 'gdas' in run else 0
                 task_names[run] += ['stage_ic', 'ecen', 'esfc', 'earc', 'cleanup']
 
