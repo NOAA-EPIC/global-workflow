@@ -50,6 +50,8 @@ class GFSCycledAppConfig(AppConfig):
             run_options[run]['do_mergensst'] = base.get('DO_MERGENSST', False)
             run_options[run]['do_vrfy_oceanda'] = base.get('DO_VRFY_OCEANDA', False)
 
+            run_options[run]['do_jediinline'] = base.get('DO_JEDIINLINE', True)
+
         return run_options
 
     def _get_app_configs(self, run):
@@ -88,6 +90,9 @@ class GFSCycledAppConfig(AppConfig):
 
         if options['do_fit2obs']:
             configs += ['fit2obs']
+
+        if options['do_jediinline']:
+            configs += ['jediinline']
 
         if options['do_verfozn']:
             configs += ['verfozn']
@@ -217,6 +222,10 @@ class GFSCycledAppConfig(AppConfig):
                     task_names[run] += ['stage_ic']
 
                 task_names[run] += ['atmanlupp', 'atmanlprod', 'fcst']
+
+                if run == "gdas":
+                    if options['do_jediinline']:
+                        task_names[run] += ['jediinline']
 
                 # gfs-specific products
                 if run == 'gfs':
