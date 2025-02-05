@@ -50,7 +50,7 @@ class GFSCycledAppConfig(AppConfig):
             run_options[run]['do_mergensst'] = base.get('DO_MERGENSST', False)
             run_options[run]['do_vrfy_oceanda'] = base.get('DO_VRFY_OCEANDA', False)
 
-            run_options[run]['do_jediinline'] = base.get('DO_JEDIINLINE', True)
+            run_options[run]['do_jediinline'] = base.get('DO_JEDIINLINE', False)
 
         return run_options
 
@@ -330,8 +330,9 @@ class GFSCycledAppConfig(AppConfig):
                     task_names[run] += ['ediag'] if options['lobsdiag_forenkf'] else ['eomg']
 
                 task_names[run].append('esnowanl') if options['do_jedisnowda'] else 0
-                task_names[run].append('efcs') if 'gdas' in run else 0
-                task_names[run].append('jediinline') if 'gdas' in run else 0
+                #task_names[run].append('efcs') if 'gdas' in run else 0
+                task_names[run] += ['jediinline'] if options['do_jediinline'] else ['efcs']
+                #task_names[run].append('jediinline') if 'gdas' in run else 0
                 task_names[run].append('epos') if 'gdas' in run else 0
 
                 task_names[run] += ['stage_ic', 'ecen', 'esfc']
