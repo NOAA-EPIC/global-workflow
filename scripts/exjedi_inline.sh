@@ -1,169 +1,128 @@
-#! /usr/bin/env bash
+#!/usr/bin/env python
 
-################################################################################
-## UNIX Script Documentation Block
-## Script name:         exglobal_forecast.sh
-## Script description:  Runs a global FV3GFS model forecast
-##
-## Author:   Fanglin Yang       Organization: NCEP/EMC       Date: 2016-11-15
-## Abstract: This script runs a single GFS forecast with FV3 dynamical core.
-##           This script is created based on a C-shell script that GFDL wrote
-##           for the NGGPS Phase-II Dycore Comparison Project.
-##
-## Script history log:
-## 2016-11-15  Fanglin Yang   First Version.
-## 2017-02-09  Rahul Mahajan  Added warm start and restructured the code.
-## 2017-03-10  Fanglin Yang   Updated for running forecast on Cray.
-## 2017-03-24  Fanglin Yang   Updated to use NEMS FV3GFS with IPD4
-## 2017-05-24  Rahul Mahajan  Updated for cycling with NEMS FV3GFS
-## 2017-09-13  Fanglin Yang   Updated for using GFDL MP and Write Component
-## 2019-04-02
-##
-## Attributes:
-##   Language: Portable Operating System Interface (POSIX) Shell
-##   Machines: All supported platforms
-##
-## Usage (Arguments)
-##	No command line argument
-##
-## Data input (location, name)
-## 	Warm start files:
-## 		1. restart file except sfc_data, $gmemdir/RESTART/$PDY.$cyc.*.nc
-##		2. sfcanl_data, $memdir/RESTART/$PDY.$cyc.*.nc
-##		3. coupler_res, $gmemdir/RESTART/$PDY.$cyc.coupler.res
-##		4. increment file, $memdir/${RUN}.t${cyc}z.atminc.nc
-##			OR $DATA/INPUT/fv3_increment.nc
-##	Cold start files:
-##		1. initial condition, $memdir/INPUT/*.nc
-##	Restart files:
-##
-##	Fix files:
-##		1. computing grid, ${FIXorog}/$CASE/${CASE}_grid.tile${n}.nc
-##		2. orography data, ${FIXorog}/$CASE/${CASE}.mx${OCNRES}_oro_data.tile${n}.nc
-##		3. mosaic data, ${FIXorog}/$CASE/${CASE}_mosaic.nc
-##		4. Global O3 data, ${FIXgfs}/am/${O3FORC}
-##		5. Global H2O data, ${FIXgfs}/am/${H2OFORC}
-##		6. Global solar constant data, ${FIXgfs}/am/global_solarconstant_noaa_an.txt
-##		7. Global surface emissivity, ${FIXgfs}/am/global_sfc_emissivity_idx.txt
-##		8. Global CO2 historical data, ${FIXgfs}/am/global_co2historicaldata_glob.txt
-##		8. Global CO2 monthly data, ${FIXgfs}/am/co2monthlycyc.txt
-##		10. Additional global CO2 data, ${FIXgfs}/am/fix_co2_proj/global_co2historicaldata
-##		11. Climatological aerosol global distribution
-##			${FIXgfs}/am/global_climaeropac_global.txt
-## 		12. Monthly volcanic forcing ${FIXgfs}/am/global_volcanic_aerosols_YYYY-YYYY.txt
-##
-## Data output (location, name)
-##	If quilting=true and output grid is gaussian grid:
-##	   1. atmf data, $memdir/${RUN}.t${cyc}z.atmf${FH3}.$OUTPUT_FILE
-##	   2. sfcf data, $memdir/${RUN}.t${cyc}z.sfcf${FH3}.$OUTPUT_FILE
-##	   3. logf data, $memdir/${RUN}.t${cyc}z.logf${FH3}.$OUTPUT_FILE
-##	If quilting=false and output grid is not gaussian grid:
-##           1. NGGPS2D, $memdir/nggps2d.tile${n}.nc
-##	   2. NGGPS3D, $memdir/nggps3d.tile${n}.nc
-##	   3. grid spec, $memdir/grid_spec.tile${n}.nc
-##	   4. atmospheric static tiles, $memdir/atmos_static.tile${n}.nc
-##	   5. atmospheric 4x daily tiles, $memdir/atmos_4xdaily.tile${n}.nc
-##
-## Status output
-##	0: Normal
-##	others: Error
-##
-## Namelist input, in RUNDIR,
-##	1. diag_table
-##	2. ufs.configure
-##	3. model_configure
-##	4. input.nml
-#######################
-# Main body starts here
-#######################
+#source "${USHgfs}/preamble.sh"
+from pathlib import Path
+from shutil import rmtree
+from uwtools.api import fs
+from uwtools.api.logging import use_uwtools_logger
+from uwtools.api import config
+from uwtools.api import template
+import os
+from os import listdir
+from os.path import isfile, join
 
-source "${USHgfs}/preamble.sh"
+use_uwtools_logger()
 
-# include all subroutines. Executions later.
-source "${USHgfs}/forecast_predet.sh" 	# include functions for variable definition
-source "${USHgfs}/forecast_det.sh"  # include functions for run type determination
-source "${USHgfs}/forecast_postdet.sh"	# include functions for variables after run type determination
-source "${USHgfs}/parsing_ufs_configure.sh"	 # include functions for ufs_configure processing
+da_nx=1
+da_ny=2
+fc_nx=1
+fc_ny=1
+ens_size=2
+data_dir="./c48_input_data"
+top_template_dict = {}
+fc_template_dict = {}
+top_template_dict["da_nx"]=da_nx
+top_template_dict["da_ny"]=da_ny
+top_template_dict["rundir"]="ModelRunDirs/c48_001"
 
-source "${USHgfs}/atparse.bash"  # include function atparse for parsing @[XYZ] templated files
+fc_template_dict["fc_nx"]=fc_nx
+fc_template_dict["fc_ny"]=fc_ny
+fc_template_dict["fc_ny"]=fc_ny
 
-# Coupling control switches, for coupling purpose, off by default
-cpl=${cpl:-.false.}
-cplflx=${cplflx:-.false.} # default off,import from outside source
-cplwav=${cplwav:-.false.} # ? how to control 1-way/2-way?
-cplchm=${cplchm:-.false.} # Chemistry model
-cplice=${cplice:-.false.} # ICE model
+forecast_yamls = {}
+rundir_dict = {}
+ensemble_dict = {}
 
-OCNTIM=${OCNTIM:-1800}
-DELTIM=${DELTIM:-450}
-ICETIM=${DELTIM}
+# set up dictionaries
+for mem in range(1, ens_size+1):
+  rundir = f"ModelRunDirs/c48_{mem:03d}"
+  filename = f"testinput/forecast_c48_{mem:03d}.yaml"
+  label = f"forecast_configuration_{mem}"
+  ensemble_dict[label] = mem
+  forecast_yamls[label]=filename
+  rundir_dict[label]=rundir
+  print("{},{}".format(label,filename))
 
-CPL_SLOW=${CPL_SLOW:-${OCNTIM}}
-CPL_FAST=${CPL_FAST:-${ICETIM}}
+# create top level template with all input files in it   
+inputfile = open('templates/letkf-c48-top.template', 'r').readlines()
+write_file = open('templates/letkf-c48-top-full.template','w')
+for line in inputfile:
+    write_file.write(line)
+    if 'Forecast configuration:' in line:
+       for label, filename in forecast_yamls.items():
+            new_line = "  - %s " %(filename)        
+            write_file.write(new_line + "\n") 
+write_file.close()
 
-echo "MAIN: Loading common variables before determination of run type"
-common_predet
+# render the top template
+template.render(
+        values_src=top_template_dict,
+        values_format='dict',
+        input_file='templates/letkf-c48-top-full.template',
+        output_file='testinput/letkf-c48-exp.yaml'
+    )
 
-echo "MAIN: Loading variables before determination of run type"
-FV3_predet
-[[ ${cplflx} = .true. ]] && CMEPS_predet
-[[ ${cplflx} = .true. ]] && MOM6_predet
-[[ ${cplwav} = .true. ]] && WW3_predet
-[[ ${cplice} = .true. ]] && CICE_predet
-[[ ${cplchm} = .true. ]] && GOCART_predet
-echo "MAIN: Variables before determination of run type loaded"
 
-echo "MAIN: Determining run type"
-UFS_det
-echo "MAIN: run type determined"
+# create the forecast yamls
+for label, filename in forecast_yamls.items():
+  fc_template_dict["run_dir"] = rundir_dict[label]
+  fc_template_dict["ensemble_num"] = ensemble_dict[label]
+  template.render(
+        values_src=fc_template_dict,
+        values_format='dict',
+        input_file='templates/letkf_c48_forecast_ufs.template',
+        output_file=filename
+    )
 
-echo "MAIN: Post-determination set up of run type"
-FV3_postdet
-[[ ${cplflx} = .true. ]] && CMEPS_postdet
-[[ ${cplflx} = .true. ]] && MOM6_postdet
-[[ ${cplwav} = .true. ]] && WW3_postdet
-[[ ${cplice} = .true. ]] && CICE_postdet
-[[ ${cplchm} = .true. ]] && GOCART_postdet
-echo "MAIN: Post-determination set up of run type finished"
+# create run directories and copy in files
+onlyfiles = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, f))]
+rundir_file = open('rundir-files.yaml','w')
+for file in onlyfiles:
+  if("ufs.configure" not in file and "input.nml" not in file):
+    basefile = os.path.basename(file)
+    newline = f"{basefile}: {file}"
+    rundir_file.write(newline + "\n")
+rundir_file.close()
 
-echo "MAIN: Writing namelists and model configuration"
-FV3_nml
-[[ ${cplflx} = .true. ]] && MOM6_nml
-[[ ${cplwav} = .true. ]] && WW3_nml
-[[ ${cplice} = .true. ]] && CICE_nml
-[[ ${cplchm} = .true. ]] && GOCART_rc
-UFS_configure
-echo "MAIN: Name lists and model configuration written"
-
-#------------------------------------------------------------------
-# run the executable
-
-if [[ "${esmf_profile:-}" = ".true." ]]; then
-  export ESMF_RUNTIME_PROFILE=ON
-  export ESMF_RUNTIME_PROFILE_OUTPUT=SUMMARY
-fi
-
-if [[ "${USE_ESMF_THREADING:-}" == "YES" ]]; then
-  unset OMP_NUM_THREADS
-else
-  export OMP_NUM_THREADS=${UFS_THREADS:-1}
-fi
-
-${NCP} "${EXECgfs}/${FCSTEXEC}" "${DATA}/"
-${APRUN_UFS} "${DATA}/${FCSTEXEC}" 1>&1 2>&2
-export ERR=$?
-export err=${ERR}
-${ERRSCRIPT} || exit "${err}"
-
-FV3_out
-[[ ${cplflx} = .true. ]] && MOM6_out
-[[ ${cplflx} = .true. ]] && CMEPS_out
-[[ ${cplwav} = .true. ]] && WW3_out
-[[ ${cplice} = .true. ]] && CICE_out
-[[ ${cplchm} = .true. ]] && GOCART_out
-[[ ${esmf_profile:-} = .true. ]] && CPL_out
-echo "MAIN: Output copied to ROTDIR"
-
-#------------------------------------------------------------------
+input_nml_dict = {}
+input_nml_dict["fc_nx"]=fc_nx
+input_nml_dict["fc_ny"]=fc_ny
+input_nml_dict["ensemble_size"]=ens_size
+input_nml_dict["atm_procs"]=fc_nx*fc_ny*6 - 1
+for mem in range(1, ens_size+1):
+  rundir = f"ModelRunDirs/c48_{mem:03d}"
+  inputdir = f"./c48_input_data/INPUT" 
+  input_nml_dict["inputdir"]=inputdir
+  input_nml_dict["ENS_XX"]=f"ens_{mem:02d}"
+  input_nml_dict["iseed_skeb"]=mem*3
+  input_nml_dict["iseed_shum"]=mem*3 + 1
+  input_nml_dict["iseed_sppt"]=mem*3 + 2
+  fs.link(
+    config="rundir-files.yaml",
+    target_dir=Path(rundir)
+    ) 
+  os.mkdir(os.path.join(rundir, "RESTART"))
+  template.render(
+        values_src=input_nml_dict,
+        values_format='dict',
+        input_file='templates/c48_input.template',
+        output_file=os.path.join(rundir,"input.nml")
+   )
+  template.render(
+        values_src=input_nml_dict,
+        values_format='dict',
+        input_file='templates/ufs.configure.template',
+        output_file=os.path.join(rundir,"ufs.configure")
+   )
+  template.render(
+        values_src=input_nml_dict,
+        values_format='dict',
+        input_file='templates/input-c48-files.template',
+        output_file="templates/input-links.template"
+   )
+  fs.link(
+    config="templates/input-links.template",
+    target_dir=Path(os.path.join(rundir, "INPUT"))
+  )
 
 exit "${err}"
