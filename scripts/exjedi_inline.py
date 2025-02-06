@@ -125,4 +125,4 @@ for mem in range(1, ens_size+1):
     target_dir=Path(os.path.join(rundir, "INPUT"))
   )
 
-exit "${err}"
+#exit "${err}" commented out by AlexB; leading to invalid syntax

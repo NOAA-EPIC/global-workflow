@@ -2,21 +2,25 @@
 
 source "${HOMEgfs}/ush/preamble.sh"
 
-if (( 10#${ENSMEM:-0} > 0 )); then
-  export DATAjob="${DATAROOT}/${RUN}efcs${ENSMEM}.${PDY:-}${cyc}"
-  export DATA="${DATAjob}/${jobid}"
-  source "${HOMEgfs}/ush/jjob_header.sh" -e "efcs" -c "base fcst efcs"
-else
-  export DATAjob="${DATAROOT}/${RUN}fcst.${PDY:-}${cyc}"
-  export DATA="${DATAjob}/${jobid}"
-  source "${HOMEgfs}/ush/jjob_header.sh" -e "fcst" -c "base fcst"
-fi
+export DATAjob="${DATAROOT}/${RUN}jediinline.${PDY:-}${cyc}"
+export DATA="${DATAjob}/${jobid}"
+source "${HOMEgfs}/ush/jjob_header.sh" -e "jediinline" -c "base jediinline"
 
-# Create the directory to hold restarts and output from the model in stmp
-export DATArestart="${DATAjob}/restart"
-if [[ ! -d "${DATArestart}" ]]; then mkdir -p "${DATArestart}"; fi
-export DATAoutput="${DATAjob}/output"
-if [[ ! -d "${DATAoutput}" ]]; then mkdir -p "${DATAoutput}"; fi
+#if (( 10#${ENSMEM:-0} > 0 )); then
+#  export DATAjob="${DATAROOT}/${RUN}efcs${ENSMEM}.${PDY:-}${cyc}"
+#  export DATA="${DATAjob}/${jobid}"
+#  source "${HOMEgfs}/ush/jjob_header.sh" -e "jediinline" -c "base jediinline"
+#else
+#  export DATAjob="${DATAROOT}/${RUN}fcst.${PDY:-}${cyc}"
+#  export DATA="${DATAjob}/${jobid}"
+#  source "${HOMEgfs}/ush/jjob_header.sh" -e "fcst" -c "base fcst"
+#fi
+
+## Create the directory to hold restarts and output from the model in stmp
+#export DATArestart="${DATAjob}/restart"
+#if [[ ! -d "${DATArestart}" ]]; then mkdir -p "${DATArestart}"; fi
+#export DATAoutput="${DATAjob}/output"
+#if [[ ! -d "${DATAoutput}" ]]; then mkdir -p "${DATAoutput}"; fi
 
 ##############################################
 # Begin JOB SPECIFIC work
