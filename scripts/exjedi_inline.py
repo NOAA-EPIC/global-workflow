@@ -10,6 +10,7 @@ from uwtools.api import template
 import os
 from os import listdir
 from os.path import isfile, join
+import subprocess
 
 use_uwtools_logger()
 
@@ -18,12 +19,14 @@ da_ny=2
 fc_nx=1
 fc_ny=1
 ens_size=2
-data_dir="./c48_input_data"
+#data_dir="./c48_input_data"
+data_dir="/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/c48_input_data"
 top_template_dict = {}
 fc_template_dict = {}
 top_template_dict["da_nx"]=da_nx
 top_template_dict["da_ny"]=da_ny
-top_template_dict["rundir"]="ModelRunDirs/c48_001"
+#top_template_dict["rundir"]="ModelRunDirs/c48_001"
+top_template_dict["rundir"]="/scratch1/NCEPDEV/nems/David.Burrows/feb3_inline/ModelRunDirs/c48_001"
 
 fc_template_dict["fc_nx"]=fc_nx
 fc_template_dict["fc_ny"]=fc_ny
@@ -35,8 +38,10 @@ ensemble_dict = {}
 
 # set up dictionaries
 for mem in range(1, ens_size+1):
-  rundir = f"ModelRunDirs/c48_{mem:03d}"
-  filename = f"testinput/forecast_c48_{mem:03d}.yaml"
+#  rundir = f"ModelRunDirs/c48_{mem:03d}"
+  rundir = f"/scratch1/NCEPDEV/nems/David.Burrows/feb3_inline/ModelRunDirs/c48_{mem:03d}"
+#  filename = f"testinput/forecast_c48_{mem:03d}.yaml"
+  filename = f"/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/testinput/forecast_c48_{mem:03d}.yaml"
   label = f"forecast_configuration_{mem}"
   ensemble_dict[label] = mem
   forecast_yamls[label]=filename
@@ -44,8 +49,8 @@ for mem in range(1, ens_size+1):
   print("{},{}".format(label,filename))
 
 # create top level template with all input files in it   
-inputfile = open('templates/letkf-c48-top.template', 'r').readlines()
-write_file = open('templates/letkf-c48-top-full.template','w')
+inputfile = open('/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/letkf-c48-top.template', 'r').readlines()
+write_file = open('/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/letkf-c48-top-full.template','w')
 for line in inputfile:
     write_file.write(line)
     if 'Forecast configuration:' in line:
@@ -58,8 +63,8 @@ write_file.close()
 template.render(
         values_src=top_template_dict,
         values_format='dict',
-        input_file='templates/letkf-c48-top-full.template',
-        output_file='testinput/letkf-c48-exp.yaml'
+        input_file='/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/letkf-c48-top-full.template',
+        output_file='/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/testinput/letkf-c48-exp.yaml'
     )
 
 
@@ -70,7 +75,7 @@ for label, filename in forecast_yamls.items():
   template.render(
         values_src=fc_template_dict,
         values_format='dict',
-        input_file='templates/letkf_c48_forecast_ufs.template',
+        input_file='/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/letkf_c48_forecast_ufs.template',
         output_file=filename
     )
 
@@ -90,8 +95,8 @@ input_nml_dict["fc_ny"]=fc_ny
 input_nml_dict["ensemble_size"]=ens_size
 input_nml_dict["atm_procs"]=fc_nx*fc_ny*6 - 1
 for mem in range(1, ens_size+1):
-  rundir = f"ModelRunDirs/c48_{mem:03d}"
-  inputdir = f"./c48_input_data/INPUT" 
+  rundir = f"/scratch1/NCEPDEV/nems/David.Burrows/feb3_inline/ModelRunDirs/c48_{mem:03d}"
+  inputdir = f"/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/c48_input_data/INPUT" 
   input_nml_dict["inputdir"]=inputdir
   input_nml_dict["ENS_XX"]=f"ens_{mem:02d}"
   input_nml_dict["iseed_skeb"]=mem*3
@@ -105,23 +110,23 @@ for mem in range(1, ens_size+1):
   template.render(
         values_src=input_nml_dict,
         values_format='dict',
-        input_file='templates/c48_input.template',
+        input_file='/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/c48_input.template',
         output_file=os.path.join(rundir,"input.nml")
    )
   template.render(
         values_src=input_nml_dict,
         values_format='dict',
-        input_file='templates/ufs.configure.template',
+        input_file='/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/ufs.configure.template',
         output_file=os.path.join(rundir,"ufs.configure")
    )
   template.render(
         values_src=input_nml_dict,
         values_format='dict',
-        input_file='templates/input-c48-files.template',
-        output_file="templates/input-links.template"
+        input_file='/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/input-c48-files.template',
+        output_file="/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/input-links.template"
    )
   fs.link(
-    config="templates/input-links.template",
+    config="/scratch1/NCEPDEV/nems/David.Burrows/feb4_mark_updates/gen-exp/templates/input-links.template",
     target_dir=Path(os.path.join(rundir, "INPUT"))
   )
 

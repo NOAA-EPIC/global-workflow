@@ -735,8 +735,8 @@ case ${step} in
   "jediinline")
     echo "enter jediinline computational requirements here"
     walltime="00:20:00"
-    ntasks=1
-    tasks_per_node=1
+    ntasks=24
+    tasks_per_node=12
     threads_per_task=1
     ;;
 

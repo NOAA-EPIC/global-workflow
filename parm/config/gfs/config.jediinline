@@ -50,7 +50,7 @@ export domains_stack_size="16000000"
 #######################################################################
 
 #export FORECASTSH="${SCRgfs}/exglobal_forecast.sh"
-export FORECASTSH="${SCRgfs}/exjedi_inline.py" 
+export FORECASTSH="${SCRgfs}/exjedi_inline.sh" 
 #export FCSTEXEC="gfs_model.x"
 
 #######################################################################
