@@ -1,5 +1,6 @@
 #! /usr/bin/env bash
 
+export STRICT=NO
 source "${HOMEgfs}/ush/preamble.sh"
 
 export DATAjob="${DATAROOT}/${RUN}jediinline.${PDY:-}${cyc}"

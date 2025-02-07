@@ -14,6 +14,11 @@ fi
 status=$?
 [[ ${status} -ne 0 ]] && exit ${status}
 
+module purge
+module use /scratch1/NCEPDEV/nems/David.Burrows/feb3_inline/modulefiles/
+module load hera.intel
+module list
+
 export job="jediinline"
 export jobid="${job}.$$"
 
