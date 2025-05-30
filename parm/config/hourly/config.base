@@ -352,6 +352,7 @@ export WRITE_NSFLIP=".true."
 
 # IAU related parameters
 export DOIAU="@DOIAU@"        # Enable 4DIAU for control with 3 increments
+export DOIAU="NO"        # Enable 4DIAU for control with 3 increments
 export DOIAU_ENKF=${DOIAU:-"YES"}   # Enable 4DIAU for EnKF ensemble
 case "${assim_freq}" in
   "6")
