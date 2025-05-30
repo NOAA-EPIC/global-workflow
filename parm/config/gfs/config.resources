@@ -53,7 +53,7 @@ case ${machine} in
               mem_node_max="251GB"
     ;;
   "GAEAC6")
-              max_tasks_per_node=192
+              max_tasks_per_node=128
               # shellcheck disable=SC2034
               mem_node_max="384GB"
     ;;

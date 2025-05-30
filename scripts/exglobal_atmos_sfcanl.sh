@@ -102,8 +102,8 @@ export MAX_TASKS_CY=${ntiles}
 
 # Copy fix files required by global_cycle to DATA just once
 for (( nn=1; nn <= ntiles; nn++ )); do
-  ${NCP} "${FIXgfs}/orog/${CASE}/${CASE}_grid.tile${nn}.nc"                 "${DATA}/fngrid.00${nn}"
-  ${NCP} "${FIXgfs}/orog/${CASE}/${CASE}.mx${OCNRES}_oro_data.tile${nn}.nc" "${DATA}/fnorog.00${nn}"
+  ${NCP} "${FIXgfs}/orog_nest/${CASE}/${CASE}_grid.tile${nn}.nc"                 "${DATA}/fngrid.00${nn}"
+  ${NCP} "${FIXgfs}/orog_nest/${CASE}/${CASE}.mx${OCNRES}_oro_data.tile${nn}.nc" "${DATA}/fnorog.00${nn}"
 done
 
 # Copy the NSST analysis file for global_cycle
