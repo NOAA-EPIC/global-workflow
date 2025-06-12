@@ -2,7 +2,8 @@
 set -eux
 
 OPTIND=1
-_opts="-f "  # forces a clean build
+#_opts="-f "  # forces a clean build
+_opts=" "
 while getopts ":j:dv" option; do
   case "${option}" in
     d) _opts+="-c -DCMAKE_BUILD_TYPE=Debug " ;;
@@ -25,6 +26,6 @@ shift $((OPTIND-1))
 BUILD_JOBS="${BUILD_JOBS:-8}" \
 WORKFLOW_BUILD="${WORKFLOW_BUILD:-"ON"}" \
 WORKFLOW_TESTS="${WORKFLOW_TESTS:-"OFF"}" \
-./gdas.cd/build.sh ${_opts} -f
+./gdas.cd/build.sh ${_opts} 
 
 exit
