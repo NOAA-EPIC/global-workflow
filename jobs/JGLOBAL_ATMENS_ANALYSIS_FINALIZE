@@ -1,6 +1,5 @@
 #! /usr/bin/env bash
 
-source "${HOMEgfs}/ush/preamble.sh"
 export WIPE_DATA="NO"
 export DATA=${DATA:-${DATAROOT}/${RUN}atmensanl_${cyc}}
 source "${HOMEgfs}/ush/jjob_header.sh" -e "atmensanlfinal" -c "base atmensanl atmensanlfinal"
@@ -21,9 +20,9 @@ export gcyc=${GDATE:8:2}
 ##############################################
 # Generate COM variable from template
 MEMDIR='ensstat' RUN=${GDUMP_ENS} YMD=${PDY} HH=${cyc} declare_from_tmpl -rx \
-    COM_ATMOS_ANALYSIS_ENS:COM_ATMOS_ANALYSIS_TMPL
+    COMOUT_ATMOS_ANALYSIS_ENS:COM_ATMOS_ANALYSIS_TMPL
 
-mkdir -m 755 -p "${COM_ATMOS_ANALYSIS_ENS}"
+mkdir -m 755 -p "${COMOUT_ATMOS_ANALYSIS_ENS}"
 
 MEMDIR='ensstat' RUN=${GDUMP_ENS} YMD=${gPDY} HH=${gcyc} declare_from_tmpl -rx \
     COM_ATMOS_ANALYSIS_ENS_PREV:COM_ATMOS_ANALYSIS_TMPL
@@ -32,9 +31,11 @@ MEMDIR='ensstat' RUN=${GDUMP_ENS} YMD=${gPDY} HH=${gcyc} declare_from_tmpl -rx \
 # Run relevant script
 
 EXSCRIPT=${GDASATMENSFINALPY:-${SCRgfs}/exglobal_atmens_analysis_finalize.py}
-${EXSCRIPT}
-status=$?
-[[ ${status} -ne 0 ]] && exit "${status}"
+${EXSCRIPT} && true
+export err=$?
+if [[ ${err} -ne 0 ]]; then
+    err_exit
+fi
 
 cp ${COM_ATMOS_ANALYSIS_ENS_PREV}/gdas.t${gcyc}z.rad_varbc_params.tar ${COM_ATMOS_ANALYSIS_ENS}/gdas.t${cyc}z.rad_varbc_params.tar
 cp ${COM_ATMOS_ANALYSIS_ENS_PREV}/gdas.t${gcyc}z.atms_n20.satbias.nc ${COM_ATMOS_ANALYSIS_ENS}/gdas.t${cyc}z.atms_n20.satbias.nc
@@ -56,7 +57,15 @@ fi
 ##########################################
 # Remove the Temporary working directory
 ##########################################
-cd "${DATAROOT}" || ( echo "FATAL ERROR: ${DATAROOT} does not exist, ABORT!"; exit 1 )
-[[ ${KEEPDATA} = "NO" ]] && rm -rf "${DATA}"
+cd "${DATAROOT}" && true
+export err=$?
+set +e
+if [[ ${err} -ne 0 ]]; then
+    err_exit "${DATAROOT} does not exist, ABORT!"
+fi
+set_trace
+if [[ "${KEEPDATA}" == "NO" ]]; then
+    rm -rf "${DATA}"
+fi
 
 exit 0
