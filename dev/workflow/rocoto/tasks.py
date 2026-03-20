@@ -13,7 +13,7 @@ __all__ = ['Tasks']
 class Tasks:
     SERVICE_TASKS = ['arch_vrfy', 'earc_vrfy', 'stage_ic', 'globus', 'ens_globus']
     DTN_TASKS = ['arch_tars', 'earc_tars', 'fetch']
-    VALID_TASKS = ['aerosol_init', 'stage_ic', 'gen_control_ic', 'fetch', 'globus', 'ens_globus',
+    VALID_TASKS = ['jediinline', 'aerosol_init', 'stage_ic', 'gen_control_ic', 'fetch', 'globus', 'ens_globus',
                    'prep_sfc', 'prep', 'anal', 'sfcanl', 'analcalc', 'analdiag', 'arch_vrfy', 'arch_tars', 'cleanup',
                    'ecen_fv3jedi', 'analcalc_fv3jedi', 'cleanup',
                    'atmanlinit', 'atmanlvar', 'atmanlfv3inc', 'atmanlfinal',
@@ -525,9 +525,9 @@ class Tasks:
         """
         Given a task_name, call the method for that task
         """
-        try:
-            return getattr(self, task_name, *args, **kwargs)()
-        except AttributeError:
-            raise AttributeError(f'"{task_name}" is not a valid task.\n'
-                                 f'Valid tasks are:\n'
-                                 f'{", ".join(Tasks.VALID_TASKS)}')
+        #try:
+        return getattr(self, task_name, *args, **kwargs)()
+        #except AttributeError:
+        #    raise AttributeError(f'"{task_name}" is not a valid task.\n'
+        #                         f'Valid tasks are:\n'
+        #                         f'{", ".join(Tasks.VALID_TASKS)}')

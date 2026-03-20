@@ -51,6 +51,7 @@ class GFSCycledAppConfig(AppConfig):
         self.runs.append('enkfgfs') if 'gfs' in self.ens_runs and 'gfs' in self.runs else 0
         self.runs.append('gdas')  # We always have a 'gdas' run
         self.runs.append('enkfgdas') if 'gdas' in self.ens_runs else 0
+        self.runs = ["jediinline"] # EPIC DAB: testing just a run=jedi
 
     def _get_run_options(self, conf: Configuration) -> Dict[str, Any]:
         """
@@ -84,6 +85,7 @@ class GFSCycledAppConfig(AppConfig):
             run_options[run]['do_jedisnowda'] = base.get('DO_JEDISNOWDA', False)
             run_options[run]['do_gsisoilda'] = base.get('DO_GSISOILDA', False)
             run_options[run]['do_mergensst'] = base.get('DO_MERGENSST', False)
+            run_options[run]['do_jediinline'] = base.get('DO_JEDIINLINE', False)
 
         return run_options
 
@@ -207,6 +209,9 @@ class GFSCycledAppConfig(AppConfig):
 
         if options['do_globusarch']:
             configs += ['globus']
+
+        if options['do_jediinline']:
+            configs += ['jediinline']
 
         return configs
 
@@ -439,4 +444,5 @@ class GFSCycledAppConfig(AppConfig):
                     else:
                         task_names[run] += ['eobs', 'eupd', 'ecen', 'ediag']
                     task_names[run] += ['efcs', 'epos', 'esfc', 'earc_tars', 'cleanup']
+            task_names[run] = ['jediinline'] if options['do_jediinline'] else 0
         return task_names

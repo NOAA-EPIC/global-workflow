@@ -18,6 +18,7 @@ if (( $# != 1 )); then
     echo "snowanl esnowanl"
     echo "aeroanlinit aeroanlvar aeroanlfinal aeroanlgenb"
     echo "anal sfcanl analcalc analdiag anlstat fcst echgres"
+    echo "jediinline"
     echo "upp atmos_products"
     echo "tracker genesis genesis_fsu"
     echo "verfozn verfrad vminmon fit2obs metp arc_vrfy arc_tars cleanup"
@@ -791,6 +792,14 @@ case ${step} in
     threads_per_task=4
     tasks_per_node=$(( max_tasks_per_node / threads_per_task ))
     is_exclusive=True
+    ;;
+
+  "jediinline")
+    echo "enter jediinline computational requirements here"
+    walltime="00:20:00"
+    ntasks=24
+    tasks_per_node=12
+    threads_per_task=1
     ;;
 
   "fcst" | "efcs")

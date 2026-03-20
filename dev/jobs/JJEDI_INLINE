@@ -1,0 +1,68 @@
+#! /usr/bin/env bash
+set -x
+
+export STRICT=NO
+source "${HOMEglobal}/ush/preamble.sh"
+
+export DATAjob="/scratch4/NCEPDEV/nems/David.Burrows/inline/mar19/jediinline.${PDY:-}${cyc}"
+export DATA="${DATAjob}/${jobid}"
+source "${HOMEglobal}/ush/jjob_header.sh" -e "jediinline" -c "base jediinline"
+
+export GDASsorc=${HOMEglobal}/sorc/gdas.cd
+export JEDIIN=/scratch3/NCEPDEV/nems/David.Burrows/jedi_input
+
+unset PYTHONPATH
+source ${JEDIIN}/uwtools/conda/etc/profile.d/conda.sh
+conda activate
+
+mkdir -p ${DATA}
+cp -r ${JEDIIN}/gen-exp ${DATA}
+chmod 766 ${DATA}/gen-exp
+cd ${DATA}/gen-exp
+
+rm -f Data/crtm/*
+cp -r ${JEDIIN}/2.3.0/* Data/crtm/
+cp -r ${JEDIIN}/AerosolCoeff.bin Data/crtm/AerosolCoeff.bin
+
+python ${HOMEglobal}/dev/scripts/exjedi_inline.py
+export err=$?;
+if [ ${err} -ne 0 ]; then exit 1; fi
+
+deactivate
+
+###############################################################
+# Run relevant exglobal script
+###############################################################
+#"${FORECASTSH:-${SCRgfs}/exjedi_inline.sh}"
+${HOMEglobal}/dev/scripts/exjedi_inline.sh
+status=$?
+(( status != 0 )) && exit "${status}"
+##############################################
+# End JOB SPECIFIC work
+##############################################
+
+##############################################
+# Final processing
+##############################################
+if [[ -e "${pgmout}" ]] ; then
+  cat "${pgmout}"
+fi
+
+##########################################
+# Remove the Temporary working directory
+##########################################
+#cd "${DATAROOT}" || true
+## do not remove DATAjob. It contains DATAoutput
+#if [[ "${KEEPDATA}" == "NO" ]]; then
+#  rm -rf "${DATA}"
+#
+#  # Determine if this is the last segment
+#  commas="${FCST_SEGMENTS//[^,]}"
+#  n_segs=${#commas}
+#  if (( n_segs - 1 == ${FCST_SEGMENT:-0} )); then
+#    # Only delete temporary restarts if it is the last segment
+#    rm -rf "${DATArestart}"
+#  fi
+#fi
+
+exit 0
